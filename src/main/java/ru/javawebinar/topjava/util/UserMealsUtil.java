@@ -8,6 +8,11 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
 import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 public class UserMealsUtil {
@@ -30,27 +35,101 @@ public class UserMealsUtil {
 
     public static List<UserMealWithExcess> filteredByCycles(List<UserMeal> meals, LocalTime startTime, LocalTime endTime, int caloriesPerDay) {
         Map<LocalDate, Integer> mealMap = new HashMap<>();
-        for (UserMeal meal : meals)
-            mealMap.merge(meal.getDateTime().toLocalDate(), meal.getCalories(), Integer::sum);
+        Map<LocalDate, ProxyMeal> proxyMealMap = new HashMap<>();
         List<UserMealWithExcess> result = new ArrayList<>();
-        for (UserMeal meal : meals)
-            if (TimeUtil.isBetweenHalfOpen(meal.getDateTime().toLocalTime(), startTime, endTime))
-                result.add(new UserMealWithExcess(
+        for (UserMeal meal : meals) {
+            LocalDate localDate = meal.getDateTime().toLocalDate();
+            int count = mealMap.merge(localDate, meal.getCalories(), Integer::sum);
+            if (count > caloriesPerDay) {
+                ProxyMeal proxyMeal = proxyMealMap.getOrDefault(localDate, null);
+                if (proxyMeal != null) {
+                    proxyMeal.setExcess();
+                    proxyMealMap.remove(localDate);
+                }
+            }
+            if (TimeUtil.isBetweenHalfOpen(meal.getDateTime().toLocalTime(), startTime, endTime)) {
+                UserMealWithExcess mealWithExcess = new UserMealWithExcess(
                         meal.getDateTime(),
                         meal.getDescription(), meal.getCalories(),
-                        mealMap.get(meal.getDateTime().toLocalDate()) > caloriesPerDay));
+                        count > caloriesPerDay);
+                result.add(mealWithExcess);
+                if (count <= caloriesPerDay) {
+                    ProxyMeal proxyMeal = proxyMealMap.get(localDate);
+                    proxyMealMap.put(localDate, new ProxyMeal(mealWithExcess, proxyMeal));
+                }
+            }
+        }
         return result;
     }
 
     public static List<UserMealWithExcess> filteredByStreams(List<UserMeal> meals, LocalTime startTime, LocalTime endTime, int caloriesPerDay) {
-        Map<LocalDate, Integer> mealMap =
-                meals.stream().collect(Collectors.toMap(
-                        meal -> meal.getDateTime().toLocalDate(), UserMeal::getCalories, Integer::sum));
-        return meals.stream().filter(meal -> TimeUtil.isBetweenHalfOpen(meal.getDateTime().toLocalTime(), startTime, endTime))
-                .map(meal -> new UserMealWithExcess(
-                        meal.getDateTime(),
-                        meal.getDescription(), meal.getCalories(),
-                        mealMap.get(meal.getDateTime().toLocalDate()) > caloriesPerDay))
-                .collect(Collectors.toList());
+        return meals.stream().collect(new Collector<UserMeal, List<UserMealWithExcess>, List<UserMealWithExcess>>() {
+            Map<LocalDate, Integer> mealMap = new HashMap<>();
+            Map<LocalDate, ProxyMeal> proxyMealMap = new HashMap<>();
+
+            @Override
+            public Supplier<List<UserMealWithExcess>> supplier() {
+                return ArrayList::new;
+            }
+
+            @Override
+            public BiConsumer<List<UserMealWithExcess>, UserMeal> accumulator() {
+                return (c, meal) -> {
+                    LocalDate localDate = meal.getDateTime().toLocalDate();
+                    int count = mealMap.merge(localDate, meal.getCalories(), Integer::sum);
+                    if (count > caloriesPerDay) {
+                        ProxyMeal proxyMeal = proxyMealMap.getOrDefault(localDate, null);
+                        if (proxyMeal != null) {
+                            proxyMeal.setExcess();
+                            proxyMealMap.remove(localDate);
+                        }
+                    }
+                    if (TimeUtil.isBetweenHalfOpen(meal.getDateTime().toLocalTime(), startTime, endTime)) {
+                        UserMealWithExcess mealWithExcess = new UserMealWithExcess(
+                                meal.getDateTime(),
+                                meal.getDescription(), meal.getCalories(),
+                                count > caloriesPerDay);
+                        c.add(mealWithExcess);
+                        if (count <= caloriesPerDay) {
+                            ProxyMeal proxyMeal = proxyMealMap.get(localDate);
+                            proxyMealMap.put(localDate, new ProxyMeal(mealWithExcess, proxyMeal));
+                        }
+                    }
+                };
+            }
+
+            @Override
+            public BinaryOperator<List<UserMealWithExcess>> combiner() {
+                return (c1, c2) -> {
+                    c1.addAll(c2);
+                    return c1;
+                };
+            }
+
+            @Override
+            public Function<List<UserMealWithExcess>, List<UserMealWithExcess>> finisher() {
+                return c -> c;
+            }
+
+            @Override
+            public Set<Characteristics> characteristics() {
+                return EnumSet.of(Characteristics.CONCURRENT);
+            }
+        });
+    }
+
+    private static class ProxyMeal {
+        private ProxyMeal previousProxyMeal;
+        private UserMealWithExcess meal;
+
+        public ProxyMeal(UserMealWithExcess meal, ProxyMeal previousProxyMeal) {
+            this.previousProxyMeal = previousProxyMeal;
+            this.meal = meal;
+        }
+
+        public void setExcess() {
+            meal.excess = true;
+            if (previousProxyMeal != null) previousProxyMeal.setExcess();
+        }
     }
 }
