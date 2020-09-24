@@ -8,12 +8,12 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
-import java.util.stream.Collectors;
 
 public class UserMealsUtil {
     public static void main(String[] args) {
@@ -35,28 +35,25 @@ public class UserMealsUtil {
 
     public static List<UserMealWithExcess> filteredByCycles(List<UserMeal> meals, LocalTime startTime, LocalTime endTime, int caloriesPerDay) {
         Map<LocalDate, Integer> mealMap = new HashMap<>();
-        Map<LocalDate, ProxyMeal> proxyMealMap = new HashMap<>();
+        Map<LocalDate, AtomicBoolean> excessMap = new HashMap<>();
         List<UserMealWithExcess> result = new ArrayList<>();
         for (UserMeal meal : meals) {
             LocalDate localDate = meal.getDateTime().toLocalDate();
             int count = mealMap.merge(localDate, meal.getCalories(), Integer::sum);
-            if (count > caloriesPerDay) {
-                ProxyMeal proxyMeal = proxyMealMap.getOrDefault(localDate, null);
-                if (proxyMeal != null) {
-                    proxyMeal.setExcess();
-                    proxyMealMap.remove(localDate);
-                }
+
+            AtomicBoolean atomicExcess = excessMap.getOrDefault(localDate, null);
+            if (atomicExcess == null) {
+                atomicExcess = new AtomicBoolean();
+                excessMap.put(localDate, atomicExcess);
             }
+            atomicExcess.set(count > caloriesPerDay);
+
             if (TimeUtil.isBetweenHalfOpen(meal.getDateTime().toLocalTime(), startTime, endTime)) {
                 UserMealWithExcess mealWithExcess = new UserMealWithExcess(
                         meal.getDateTime(),
                         meal.getDescription(), meal.getCalories(),
-                        count > caloriesPerDay);
+                        atomicExcess);
                 result.add(mealWithExcess);
-                if (count <= caloriesPerDay) {
-                    ProxyMeal proxyMeal = proxyMealMap.get(localDate);
-                    proxyMealMap.put(localDate, new ProxyMeal(mealWithExcess, proxyMeal));
-                }
             }
         }
         return result;
@@ -65,7 +62,7 @@ public class UserMealsUtil {
     public static List<UserMealWithExcess> filteredByStreams(List<UserMeal> meals, LocalTime startTime, LocalTime endTime, int caloriesPerDay) {
         return meals.stream().collect(new Collector<UserMeal, List<UserMealWithExcess>, List<UserMealWithExcess>>() {
             Map<LocalDate, Integer> mealMap = new HashMap<>();
-            Map<LocalDate, ProxyMeal> proxyMealMap = new HashMap<>();
+            Map<LocalDate, AtomicBoolean> excessMap = new HashMap<>();
 
             @Override
             public Supplier<List<UserMealWithExcess>> supplier() {
@@ -77,23 +74,19 @@ public class UserMealsUtil {
                 return (c, meal) -> {
                     LocalDate localDate = meal.getDateTime().toLocalDate();
                     int count = mealMap.merge(localDate, meal.getCalories(), Integer::sum);
-                    if (count > caloriesPerDay) {
-                        ProxyMeal proxyMeal = proxyMealMap.getOrDefault(localDate, null);
-                        if (proxyMeal != null) {
-                            proxyMeal.setExcess();
-                            proxyMealMap.remove(localDate);
-                        }
+
+                    AtomicBoolean atomicExcess = excessMap.getOrDefault(localDate, null);
+                    if (atomicExcess == null) {
+                        atomicExcess = new AtomicBoolean();
+                        excessMap.put(localDate, atomicExcess);
                     }
+                    atomicExcess.set(count > caloriesPerDay);
+
                     if (TimeUtil.isBetweenHalfOpen(meal.getDateTime().toLocalTime(), startTime, endTime)) {
-                        UserMealWithExcess mealWithExcess = new UserMealWithExcess(
+                        c.add(new UserMealWithExcess(
                                 meal.getDateTime(),
                                 meal.getDescription(), meal.getCalories(),
-                                count > caloriesPerDay);
-                        c.add(mealWithExcess);
-                        if (count <= caloriesPerDay) {
-                            ProxyMeal proxyMeal = proxyMealMap.get(localDate);
-                            proxyMealMap.put(localDate, new ProxyMeal(mealWithExcess, proxyMeal));
-                        }
+                                atomicExcess));
                     }
                 };
             }
@@ -116,20 +109,5 @@ public class UserMealsUtil {
                 return EnumSet.of(Characteristics.CONCURRENT);
             }
         });
-    }
-
-    private static class ProxyMeal {
-        private ProxyMeal previousProxyMeal;
-        private UserMealWithExcess meal;
-
-        public ProxyMeal(UserMealWithExcess meal, ProxyMeal previousProxyMeal) {
-            this.previousProxyMeal = previousProxyMeal;
-            this.meal = meal;
-        }
-
-        public void setExcess() {
-            meal.excess = true;
-            if (previousProxyMeal != null) previousProxyMeal.setExcess();
-        }
     }
 }
