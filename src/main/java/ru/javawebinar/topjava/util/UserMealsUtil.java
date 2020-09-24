@@ -54,11 +54,7 @@ public class UserMealsUtil {
         LocalDate localDate = meal.getDateTime().toLocalDate();
         int count = mealMap.merge(localDate, meal.getCalories(), Integer::sum);
 
-        AtomicBoolean atomicExcess = excessMap.getOrDefault(localDate, null);
-        if (atomicExcess == null) {
-            atomicExcess = new AtomicBoolean();
-            excessMap.put(localDate, atomicExcess);
-        }
+        AtomicBoolean atomicExcess = excessMap.computeIfAbsent(localDate, ld -> new AtomicBoolean());
         atomicExcess.set(count > caloriesPerDay);
         return atomicExcess;
     }
