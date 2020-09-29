@@ -92,7 +92,7 @@ public class UserMealsUtil {
                     }
 
                     @Override
-                    public BiConsumer<List<UserMealWithExcess>, UserMeal> accumulator() {
+                    public synchronized BiConsumer<List<UserMealWithExcess>, UserMeal> accumulator() {
                         return (list, meal) -> calcExcess(caloriesPerDay, caloriesPerDayMap, excessPerDayMap, meal, startTime, endTime, list);
                     }
 
@@ -116,11 +116,11 @@ public class UserMealsUtil {
                 });
     }
 
-    private static void calcExcess(int caloriesPerDay, Map<LocalDate, Integer> mealMap, Map<LocalDate, AtomicBoolean> excessMap, UserMeal meal, LocalTime startTime, LocalTime endTime, List<UserMealWithExcess> result) {
+    private static void calcExcess(int caloriesPerDay, Map<LocalDate, Integer> caloriesPerDayMap, Map<LocalDate, AtomicBoolean> excessPerDayMap, UserMeal meal, LocalTime startTime, LocalTime endTime, List<UserMealWithExcess> result) {
         LocalDate localDate = meal.getDateTime().toLocalDate();
-        int count = mealMap.merge(localDate, meal.getCalories(), Integer::sum);
+        int count = caloriesPerDayMap.merge(localDate, meal.getCalories(), Integer::sum);
 
-        AtomicBoolean atomicExcess = excessMap.computeIfAbsent(localDate, ld -> new AtomicBoolean());
+        AtomicBoolean atomicExcess = excessPerDayMap.computeIfAbsent(localDate, ld -> new AtomicBoolean());
         atomicExcess.set(count > caloriesPerDay);
 
         if (TimeUtil.isBetweenHalfOpen(meal.getDateTime().toLocalTime(), startTime, endTime)) {
@@ -150,7 +150,7 @@ public class UserMealsUtil {
                     }
 
                     @Override
-                    public BiConsumer<List<UserMealWithExcess>, UserMeal> accumulator() {
+                    public synchronized BiConsumer<List<UserMealWithExcess>, UserMeal> accumulator() {
                         return (list, meal) -> calcExcessOriginal(list, meal, caloriesPerDayMap, caloriesPerDay, proxyMealMap, startTime, endTime);
                     }
 
