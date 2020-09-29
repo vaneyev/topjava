@@ -138,39 +138,40 @@ public class UserMealsUtil {
     }
 
     public static List<UserMealWithExcess> filteredByStreamsOriginalOptional2(List<UserMeal> meals, LocalTime startTime, LocalTime endTime, int caloriesPerDay) {
-        return meals.stream().collect(new Collector<UserMeal, List<UserMealWithExcess>, List<UserMealWithExcess>>() {
-            Map<LocalDate, Integer> caloriesPerDayMap = new HashMap<>();
-            Map<LocalDate, ProxyMeal> proxyMealMap = new HashMap<>();
+        return meals.stream()
+                .collect(new Collector<UserMeal, List<UserMealWithExcess>, List<UserMealWithExcess>>() {
+                    Map<LocalDate, Integer> caloriesPerDayMap = new HashMap<>();
+                    Map<LocalDate, ProxyMeal> proxyMealMap = new HashMap<>();
 
-            @Override
-            public Supplier<List<UserMealWithExcess>> supplier() {
-                return ArrayList::new;
-            }
+                    @Override
+                    public Supplier<List<UserMealWithExcess>> supplier() {
+                        return ArrayList::new;
+                    }
 
-            @Override
-            public BiConsumer<List<UserMealWithExcess>, UserMeal> accumulator() {
-                return (list, meal) -> calcExcessOriginal(list, meal, caloriesPerDayMap, caloriesPerDay, proxyMealMap, startTime, endTime);
-            }
+                    @Override
+                    public BiConsumer<List<UserMealWithExcess>, UserMeal> accumulator() {
+                        return (list, meal) -> calcExcessOriginal(list, meal, caloriesPerDayMap, caloriesPerDay, proxyMealMap, startTime, endTime);
+                    }
 
 
-            @Override
-            public BinaryOperator<List<UserMealWithExcess>> combiner() {
-                return (list1, list2) -> {
-                    list1.addAll(list2);
-                    return list1;
-                };
-            }
+                    @Override
+                    public BinaryOperator<List<UserMealWithExcess>> combiner() {
+                        return (list1, list2) -> {
+                            list1.addAll(list2);
+                            return list1;
+                        };
+                    }
 
-            @Override
-            public Function<List<UserMealWithExcess>, List<UserMealWithExcess>> finisher() {
-                return Function.identity();
-            }
+                    @Override
+                    public Function<List<UserMealWithExcess>, List<UserMealWithExcess>> finisher() {
+                        return Function.identity();
+                    }
 
-            @Override
-            public Set<Characteristics> characteristics() {
-                return EnumSet.of(Characteristics.CONCURRENT);
-            }
-        });
+                    @Override
+                    public Set<Characteristics> characteristics() {
+                        return EnumSet.of(Characteristics.CONCURRENT);
+                    }
+                });
     }
 
     private static void calcExcessOriginal(List<UserMealWithExcess> result, UserMeal meal, Map<LocalDate, Integer> caloriesPerDayMap, int caloriesPerDay, Map<LocalDate, ProxyMeal> proxyMealMap, LocalTime startTime, LocalTime endTime) {
