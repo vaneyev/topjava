@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
@@ -82,8 +83,8 @@ public class UserMealsUtil {
     public static List<UserMealWithExcess> filteredByStreamsOptional2(List<UserMeal> meals, LocalTime startTime, LocalTime endTime, int caloriesPerDay) {
         return meals.stream()
                 .collect(new Collector<UserMeal, List<UserMealWithExcess>, List<UserMealWithExcess>>() {
-                    Map<LocalDate, Integer> caloriesPerDayMap = new HashMap<>();
-                    Map<LocalDate, AtomicBoolean> excessPerDayMap = new HashMap<>();
+                    Map<LocalDate, Integer> caloriesPerDayMap = new ConcurrentHashMap<>();
+                    Map<LocalDate, AtomicBoolean> excessPerDayMap = new ConcurrentHashMap<>();
 
                     @Override
                     public Supplier<List<UserMealWithExcess>> supplier() {
@@ -140,8 +141,8 @@ public class UserMealsUtil {
     public static List<UserMealWithExcess> filteredByStreamsOriginalOptional2(List<UserMeal> meals, LocalTime startTime, LocalTime endTime, int caloriesPerDay) {
         return meals.stream()
                 .collect(new Collector<UserMeal, List<UserMealWithExcess>, List<UserMealWithExcess>>() {
-                    Map<LocalDate, Integer> caloriesPerDayMap = new HashMap<>();
-                    Map<LocalDate, ProxyMeal> proxyMealMap = new HashMap<>();
+                    Map<LocalDate, Integer> caloriesPerDayMap = new ConcurrentHashMap<>();
+                    Map<LocalDate, ProxyMeal> proxyMealMap = new ConcurrentHashMap<>();
 
                     @Override
                     public Supplier<List<UserMealWithExcess>> supplier() {
@@ -152,7 +153,6 @@ public class UserMealsUtil {
                     public BiConsumer<List<UserMealWithExcess>, UserMeal> accumulator() {
                         return (list, meal) -> calcExcessOriginal(list, meal, caloriesPerDayMap, caloriesPerDay, proxyMealMap, startTime, endTime);
                     }
-
 
                     @Override
                     public BinaryOperator<List<UserMealWithExcess>> combiner() {
