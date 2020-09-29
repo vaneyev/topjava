@@ -10,7 +10,7 @@ public class UserMealWithExcess {
 
     private final int calories;
 
-    private final AtomicBoolean excess;
+    private AtomicBoolean excess;
 
     public UserMealWithExcess(LocalDateTime dateTime, String description, int calories, boolean excess) {
         this.dateTime = dateTime;
@@ -24,6 +24,10 @@ public class UserMealWithExcess {
         this.description = description;
         this.calories = calories;
         this.excess = excess;
+    }
+
+    public void setExcess(boolean excess) {
+        this.excess = new AtomicBoolean(excess);
     }
 
     @Override
