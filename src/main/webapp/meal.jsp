@@ -10,13 +10,13 @@
 <h2>Edit meal</h2>
 <jsp:useBean id="meal" scope="request" type="ru.javawebinar.topjava.model.Meal"/>
 <form method="POST" action='meals' name="frmMeal">
-    <input type="hidden" name="id" value="<c:out value="${meal.id}" />">
+    <input type="hidden" name="id" value="${meal.id}">
     <table>
         <tr>
             <td>Date :</td>
             <td>
                 <label>
-                    <input type="datetime-local" name="datetime" value="<c:out value="${meal.dateTime}" />"/>
+                    <input type="datetime-local" name="datetime" value="${meal.dateTime}"/>
                 </label>
             </td>
         </tr>
@@ -24,7 +24,7 @@
             <td>Description :</td>
             <td>
                 <label>
-                    <input type="text" name="description" value="<c:out value="${meal.description}" />"/>
+                    <input type="text" name="description" value="${meal.description}"/>
                 </label>
             </td>
         </tr>
@@ -32,7 +32,7 @@
             <td>Calories :</td>
             <td>
                 <label>
-                    <input type="number" name="calories" value="<c:out value="${meal.calories}" />"/>
+                    <input type="number" name="calories" value="${meal.calories}"/>
                 </label>
             </td>
         </tr>

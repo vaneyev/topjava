@@ -9,9 +9,9 @@ public interface MealDao {
 
     List<Meal> getAll();
 
-    Meal create();
+    Meal create(Meal meal);
 
-    void update(Meal meal);
+    Meal update(Meal meal);
 
-    void delete(Long id);
+    Meal delete(Long id);
 }
