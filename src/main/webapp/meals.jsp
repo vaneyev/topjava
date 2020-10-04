@@ -8,37 +8,40 @@
 <h3><a href="index.html">Home</a></h3>
 <hr>
 <h2>Meals</h2>
-<jsp:useBean id="meals" scope="request" type="java.util.List"/>
+<a href="meals?action=create">Add Meal</a>
 <table>
-    <thead>
     <tr>
-        <td>
+        <th>
             Date
-        </td>
-        <td>
+        </th>
+        <th>
             Description
-        </td>
-        <td>
+        </th>
+        <th>
             Calories
-        </td>
+        </th>
     </tr>
-    </thead>
-    <tbody>
+    <jsp:useBean id="meals" scope="request" type="java.util.List<ru.javawebinar.topjava.model.MealTo>"/>
     <c:forEach var="meal" items="${meals}">
         <jsp:useBean id="dateTimeFormatter" scope="request" type="java.time.format.DateTimeFormatter"/>
-        <tr style="color: ${meal.isExcess() ? "red" : "green"}">
+        <tr style="color: ${meal.excess ? "red" : "green"}">
             <td>
-                    ${meal.getDateTime().format(dateTimeFormatter)}
+                    ${meal.dateTime.format(dateTimeFormatter)}
             </td>
             <td>
-                    ${meal.getDescription()}
+                    ${meal.description}
             </td>
             <td>
-                    ${meal.getCalories()}
+                    ${meal.calories}
+            </td>
+            <td>
+                <a href="meals?action=update&id=${meal.id}">Update</a>
+            </td>
+            <td>
+                <a href="meals?action=delete&id=${meal.id}">Delete</a>
             </td>
         </tr>
     </c:forEach>
-    </tbody>
 </table>
 </body>
 </html>

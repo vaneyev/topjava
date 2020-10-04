@@ -19,6 +19,10 @@
     <servlet>
         <servlet-name>mealServlet</servlet-name>
         <servlet-class>ru.javawebinar.topjava.web.MealServlet</servlet-class>
+        <init-param>
+            <param-name>dao</param-name>
+            <param-value>memory</param-value>
+        </init-param>
         <load-on-startup>0</load-on-startup>
     </servlet>
     <servlet-mapping>
