@@ -23,10 +23,10 @@ public class MealServlet extends HttpServlet {
     private static final Logger log = getLogger(MealServlet.class);
     private static final int caloriesPerDay = 2000;
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm");
-    private MealDao meals;
     private static final String mealsForwardPage = "/meals.jsp";
     private static final String mealsRedirectPage = "meals";
     private static final String mealPage = "/meal.jsp";
+    private MealDao meals;
 
     @Override
     public void init() {
@@ -40,32 +40,40 @@ public class MealServlet extends HttpServlet {
         meals.create(new Meal(null, LocalDateTime.of(2020, Month.JANUARY, 31, 20, 0), "Ужин", 410));
     }
 
+    private enum MealAction {
+         CREATE, REQUEST, UPDATE, DELETE,
+    }
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String action = request.getParameter("action");
-        if (action == null) {
-            request.setAttribute("meals", MealsUtil.filteredByStreams(meals.getAll(), LocalTime.MIN, LocalTime.MAX, caloriesPerDay));
-            request.setAttribute("dateTimeFormatter", dateTimeFormatter);
-            log.debug("forward to meals");
-            request.getRequestDispatcher(mealsForwardPage).forward(request, response);
-            return;
+        MealAction action;
+        try {
+            action = MealAction.valueOf(request.getParameter("action").toUpperCase());
+        } catch (Exception exception) {
+            action = MealAction.REQUEST;
         }
         switch (action) {
-            case "delete":
-                meals.delete(parseId(request));
+            case REQUEST:
                 request.setAttribute("meals", MealsUtil.filteredByStreams(meals.getAll(), LocalTime.MIN, LocalTime.MAX, caloriesPerDay));
                 request.setAttribute("dateTimeFormatter", dateTimeFormatter);
-                log.debug("redirect to meals");
+                log.debug("request meals");
+                request.getRequestDispatcher(mealsForwardPage).forward(request, response);
+                break;
+            case DELETE:
+                Long id = parseId(request);
+                meals.delete(id);
+                log.debug("delete the meal with id " + id);
                 response.sendRedirect(mealsRedirectPage);
                 break;
-            case "create":
+            case CREATE:
                 request.setAttribute("meal", new Meal(null, LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES), "", 0));
-                log.debug("forward to meal");
+                log.debug("forward to a new meal");
                 request.getRequestDispatcher(mealPage).forward(request, response);
                 break;
-            case "update":
-                request.setAttribute("meal", meals.getById(parseId(request)));
-                log.debug("forward to meal");
+            case UPDATE:
+                Meal meal = meals.getById(parseId(request));
+                request.setAttribute("meal", meal);
+                log.debug("forward to the meal with id " + meal.getId());
                 request.getRequestDispatcher(mealPage).forward(request, response);
                 break;
         }
@@ -78,14 +86,18 @@ public class MealServlet extends HttpServlet {
         LocalDateTime dateTime = LocalDateTime.parse(request.getParameter("datetime")).truncatedTo(ChronoUnit.MINUTES);
         String description = request.getParameter("description");
         int calories = Integer.parseInt(request.getParameter("calories"));
+        Meal meal = new Meal(id, dateTime, description, calories);
         if (id == null) {
-            meals.create(new Meal(id, dateTime, description, calories));
+            meal = meals.create(meal);
+            log.debug("create the meal with id " + meal.getId());
         } else {
-            meals.update(new Meal(id, dateTime, description, calories));
+            meal = meals.update(meal);
+            if (meal == null) {
+                log.error("the meal with id " + id + " was not updated");
+            } else {
+                log.debug("update the meal with id " + meal.getId());
+            }
         }
-        request.setAttribute("meals", MealsUtil.filteredByStreams(meals.getAll(), LocalTime.MIN, LocalTime.MAX, caloriesPerDay));
-        request.setAttribute("dateTimeFormatter", dateTimeFormatter);
-        log.debug("redirect to meals");
         response.sendRedirect(mealsRedirectPage);
     }
 
