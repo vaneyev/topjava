@@ -40,41 +40,32 @@ public class MealServlet extends HttpServlet {
         meals.create(new Meal(null, LocalDateTime.of(2020, Month.JANUARY, 31, 20, 0), "Ужин", 410));
     }
 
-    private enum MealAction {
-         CREATE, REQUEST, UPDATE, DELETE,
-    }
-
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        MealAction action;
-        try {
-            action = MealAction.valueOf(request.getParameter("action").toUpperCase());
-        } catch (Exception exception) {
-            action = MealAction.REQUEST;
-        }
-        switch (action) {
-            case REQUEST:
-                request.setAttribute("meals", MealsUtil.filteredByStreams(meals.getAll(), LocalTime.MIN, LocalTime.MAX, caloriesPerDay));
-                request.setAttribute("dateTimeFormatter", dateTimeFormatter);
-                log.debug("request meals");
-                request.getRequestDispatcher(mealsForwardPage).forward(request, response);
-                break;
-            case DELETE:
+        String action = request.getParameter("action");
+        switch (action == null ? "" : action.toLowerCase()) {
+            case "delete":
                 Long id = parseId(request);
                 meals.delete(id);
                 log.debug("delete the meal with id " + id);
                 response.sendRedirect(mealsRedirectPage);
                 break;
-            case CREATE:
+            case "create":
                 request.setAttribute("meal", new Meal(null, LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES), "", 0));
                 log.debug("forward to a new meal");
                 request.getRequestDispatcher(mealPage).forward(request, response);
                 break;
-            case UPDATE:
+            case "update":
                 Meal meal = meals.getById(parseId(request));
                 request.setAttribute("meal", meal);
                 log.debug("forward to the meal with id " + meal.getId());
                 request.getRequestDispatcher(mealPage).forward(request, response);
+                break;
+            default:
+                request.setAttribute("meals", MealsUtil.filteredByStreams(meals.getAll(), LocalTime.MIN, LocalTime.MAX, caloriesPerDay));
+                request.setAttribute("dateTimeFormatter", dateTimeFormatter);
+                log.debug("request meals");
+                request.getRequestDispatcher(mealsForwardPage).forward(request, response);
                 break;
         }
     }
