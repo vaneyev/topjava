@@ -30,10 +30,11 @@ public class InMemoryUserRepository implements UserRepository {
         if (user.isNew()) {
             user.setId(counter.incrementAndGet());
             repository.put(user.getId(), user);
+            log.info("save {}", user);
             return user;
         }
         log.info("save {}", user);
-        return repository.computeIfPresent(user.getId(), (id, oldMeal) -> user);
+        return repository.computeIfPresent(user.getId(), (id, oldUser) -> user);
     }
 
     @Override
@@ -45,12 +46,17 @@ public class InMemoryUserRepository implements UserRepository {
     @Override
     public List<User> getAll() {
         log.info("getAll");
-        return repository.values().stream().sorted(Comparator.comparing(User::getName)).collect(Collectors.toList());
+        return repository.values().stream()
+                .sorted(Comparator.comparing(User::getName).thenComparing(User::getEmail))
+                .collect(Collectors.toList());
     }
 
     @Override
     public User getByEmail(String email) {
         log.info("getByEmail {}", email);
-        return repository.values().stream().filter(u -> u.getEmail().equals(email)).findAny().orElse(null);
+        return repository.values().stream()
+                .filter(u -> u.getEmail().equals(email))
+                .findAny()
+                .orElse(null);
     }
 }
