@@ -1,6 +1,7 @@
 package ru.javawebinar.topjava.web;
 
 import org.slf4j.Logger;
+import org.springframework.util.StringUtils;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -22,9 +23,11 @@ public class UserServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String user = req.getParameter("user");
-        if (user != null && !user.isEmpty()) {
+        if (!StringUtils.isEmpty(user)) {
             SecurityUtil.setAuthUserId(Integer.parseInt(user));
+            log.info("Login {}", user);
         }
-        resp.sendRedirect("users");
+
+        resp.sendRedirect("meals");
     }
 }

@@ -33,19 +33,19 @@ public class InMemoryMealRepository implements MealRepository {
             meals.put(meal.getId(), meal);
             return meal;
         }
-        return meals.put(meal.getId(), meal);
+        return meals.computeIfPresent(meal.getId(), (key, value) -> meal);
     }
 
     @Override
     public boolean delete(int id, int userId) {
-        Map<Integer, Meal> meals = repository.computeIfAbsent(userId, key -> new ConcurrentHashMap<>());
-        return meals.remove(id) != null;
+        Map<Integer, Meal> meals = repository.get(userId);
+        return meals == null ? null : meals.remove(id) != null;
     }
 
     @Override
     public Meal get(int id, int userId) {
-        Map<Integer, Meal> meals = repository.computeIfAbsent(userId, key -> new ConcurrentHashMap<>());
-        return meals.get(id);
+        Map<Integer, Meal> meals = repository.get(userId);
+        return meals == null ? null : meals.get(id);
     }
 
     @Override
@@ -59,9 +59,10 @@ public class InMemoryMealRepository implements MealRepository {
     }
 
     private List<Meal> getByPredicate(int userId, Predicate<Meal> filter) {
-        return repository.computeIfAbsent(userId, key -> new ConcurrentHashMap<>()).values().stream()
+        Map<Integer, Meal> meals = repository.get(userId);
+        return meals == null ? null : repository.get(userId).values().stream()
                 .filter(filter)
-                .sorted(Comparator.comparing(Meal::getDate).thenComparing(Meal::getTime).reversed())
+                .sorted(Comparator.comparing(Meal::getDateTime).reversed())
                 .collect(Collectors.toList());
     }
 }

@@ -21,23 +21,22 @@
     <h3><a href="index.html">Home</a></h3>
     <hr/>
     <h2>Meals</h2>
-    <form action="meals" method="post">
-        <input type="hidden" name="filter" value="true">
+    <form action="meals" method="get">
         <dl>
             <dt>From date:</dt>
-            <dd><input type="date" value="${startdate}" name="startdate"></dd>
+            <dd><input type="date" value="${param.startdate}" name="startdate"></dd>
         </dl>
         <dl>
             <dt>To date:</dt>
-            <dd><input type="date" value="${enddate}" name="enddate"></dd>
+            <dd><input type="date" value="${param.enddate}" name="enddate"></dd>
         </dl>
         <dl>
             <dt>From time:</dt>
-            <dd><input type="time" value="${starttime}" name="starttime"></dd>
+            <dd><input type="time" value="${param.starttime}" name="starttime"></dd>
         </dl>
         <dl>
             <dt>To time:</dt>
-            <dd><input type="time" value="${endtime}" name="endtime"></dd>
+            <dd><input type="time" value="${param.endtime}" name="endtime"></dd>
         </dl>
         <button type="submit">Filter</button>
     </form>
