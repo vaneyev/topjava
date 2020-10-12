@@ -7,6 +7,7 @@ import ru.javawebinar.topjava.util.DateTimeUtil;
 import ru.javawebinar.topjava.util.MealsUtil;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +40,7 @@ public class InMemoryMealRepository implements MealRepository {
     @Override
     public boolean delete(int id, int userId) {
         Map<Integer, Meal> meals = repository.get(userId);
-        return meals == null ? null : meals.remove(id) != null;
+        return meals != null && meals.remove(id) != null;
     }
 
     @Override
@@ -60,7 +61,7 @@ public class InMemoryMealRepository implements MealRepository {
 
     private List<Meal> getByPredicate(int userId, Predicate<Meal> filter) {
         Map<Integer, Meal> meals = repository.get(userId);
-        return meals == null ? null : repository.get(userId).values().stream()
+        return meals == null ? Collections.emptyList() : meals.values().stream()
                 .filter(filter)
                 .sorted(Comparator.comparing(Meal::getDateTime).reversed())
                 .collect(Collectors.toList());
