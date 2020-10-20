@@ -12,23 +12,21 @@ import static ru.javawebinar.topjava.model.AbstractBaseEntity.START_SEQ;
 public class MealTestData {
     public static final int MEAL_ID = START_SEQ + 2;
     public static final int NOT_FOUND = 10;
-    public static final List<Meal> list = new ArrayList<>();
 
-    static {
-        list.add(new Meal(START_SEQ + 2, LocalDateTime.of(2020, 10, 19, 8, 30), "User Breakfast", 500));
-        list.add(new Meal(START_SEQ + 3, LocalDateTime.of(2020, 10, 19, 12, 35), "User Lunch", 1000));
-        list.add(new Meal(START_SEQ + 4, LocalDateTime.of(2020, 10, 19, 18, 10), "User Dinner", 1001));
-        list.add(new Meal(START_SEQ + 5, LocalDateTime.of(2020, 10, 20, 8, 30), "User Breakfast", 500));
-        list.add(new Meal(START_SEQ + 6, LocalDateTime.of(2020, 10, 20, 12, 35), "User Lunch", 500));
-        list.add(new Meal(START_SEQ + 7, LocalDateTime.of(2020, 10, 20, 18, 10), "User Dinner", 1000));
-    }
+    public static final Meal meal1 = new Meal(START_SEQ + 2, LocalDateTime.of(2020, 10, 19, 8, 30), "User Breakfast", 500);
+    public static final Meal meal2 = new Meal(START_SEQ + 3, LocalDateTime.of(2020, 10, 19, 12, 35), "User Lunch", 1000);
+    public static final Meal meal3 = new Meal(START_SEQ + 4, LocalDateTime.of(2020, 10, 19, 18, 10), "User Dinner", 1001);
+    public static final Meal meal4 = new Meal(START_SEQ + 5, LocalDateTime.of(2020, 10, 20, 8, 30), "User Breakfast", 500);
+    public static final Meal meal5 = new Meal(START_SEQ + 6, LocalDateTime.of(2020, 10, 20, 12, 35), "User Lunch", 500);
+    public static final Meal meal6 = new Meal(START_SEQ + 7, LocalDateTime.of(2020, 10, 20, 18, 10), "User Dinner", 1000);
 
     public static Meal getNew() {
         return new Meal(null, LocalDateTime.of(2020, 10, 10, 18, 10), "Admin Dinner", 1000);
     }
 
     public static Meal getUpdated() {
-        Meal updated = new Meal(list.get(0));
+        Meal updated = new Meal(meal1);
+        updated.setDateTime(LocalDateTime.of(2020, 10, 10, 15, 00));
         updated.setDescription("Updated meal");
         updated.setCalories(200);
         return updated;

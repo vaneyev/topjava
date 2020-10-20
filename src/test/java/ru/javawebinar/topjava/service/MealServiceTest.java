@@ -16,6 +16,8 @@ import ru.javawebinar.topjava.util.exception.NotFoundException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,6 +29,7 @@ import static ru.javawebinar.topjava.UserTestData.USER_ID;
 
 @ContextConfiguration({
         "classpath:spring/spring-app.xml",
+        "classpath:spring/spring-app-jdbc.xml",
         "classpath:spring/spring-db.xml"
 })
 @RunWith(SpringRunner.class)
@@ -45,11 +48,16 @@ public class MealServiceTest {
     @Test
     public void get() {
         Meal meal = service.get(MEAL_ID, USER_ID);
-        assertMatch(meal, meal);
+        assertMatch(meal, meal1);
     }
 
     @Test
     public void getNotFound() {
+        assertThrows(NotFoundException.class, () -> service.get(NOT_FOUND, USER_ID));
+    }
+
+    @Test
+    public void getNotFoundByUser() {
         assertThrows(NotFoundException.class, () -> service.get(MEAL_ID, ADMIN_ID));
     }
 
@@ -65,29 +73,35 @@ public class MealServiceTest {
     }
 
     @Test
+    public void deletedNotFoundByUser() throws Exception {
+        assertThrows(NotFoundException.class, () -> service.delete(MEAL_ID, ADMIN_ID));
+    }
+
+    @Test
     public void getBetweenInclusive() {
         LocalDate start = LocalDate.of(2020, 10, 19);
         LocalDate end = LocalDate.of(2020, 10, 19);
         List<Meal> meals = service.getBetweenInclusive(start, end, USER_ID);
-        MealTestData.assertMatch(meals, list.stream()
-                .filter(meal -> Util.isBetweenHalfOpen(meal.getDate(), start, end.plusDays(1)))
-                .sorted(Comparator.comparing(Meal::getDateTime).reversed())
-                .collect(Collectors.toList()));
+        MealTestData.assertMatch(meals, Arrays.asList(meal3, meal2, meal1));
+    }
+
+    @Test
+    public void getBetweenInclusiveWithoutBoundaries() {
+        List<Meal> meals = service.getBetweenInclusive(null, null, USER_ID);
+        MealTestData.assertMatch(meals, Arrays.asList(meal6, meal5, meal4, meal3, meal2, meal1));
     }
 
     @Test
     public void getAll() {
         List<Meal> all = service.getAll(USER_ID);
-        MealTestData.assertMatch(all, list.stream()
-                .sorted(Comparator.comparing(Meal::getDateTime).reversed())
-                .collect(Collectors.toList()));
+        MealTestData.assertMatch(all, Arrays.asList(meal6, meal5, meal4, meal3, meal2, meal1));
     }
 
     @Test
     public void update() {
         Meal updated = getUpdated();
         service.update(updated, USER_ID);
-        MealTestData.assertMatch(service.get(MEAL_ID, USER_ID), updated);
+        MealTestData.assertMatch(service.get(MEAL_ID, USER_ID), getUpdated());
     }
 
     @Test
@@ -101,6 +115,7 @@ public class MealServiceTest {
         Meal newMeal = getNew();
         Meal created = service.create(newMeal, ADMIN_ID);
         Integer newId = created.getId();
+        newMeal = getNew();
         newMeal.setId(newId);
         assertMatch(created, newMeal);
         assertMatch(service.get(newId, ADMIN_ID), newMeal);
@@ -111,10 +126,9 @@ public class MealServiceTest {
         assertThrows(DuplicateKeyException.class, () ->
                 service.create(new Meal(
                         null,
-                        LocalDateTime.of(2020, 10, 19, 8, 30),
+                        meal1.getDateTime(),
                         "User Breakfast",
                         500
                 ), USER_ID));
     }
-
 }
