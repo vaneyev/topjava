@@ -14,18 +14,29 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static ru.javawebinar.topjava.model.AbstractBaseEntity.START_SEQ;
+
 public class MealsUtil {
     public static final int DEFAULT_CALORIES_PER_DAY = 2000;
 
-    public static final List<Meal> meals = Arrays.asList(
-            new Meal(LocalDateTime.of(2020, Month.JANUARY, 30, 10, 0), "Завтрак", 500),
-            new Meal(LocalDateTime.of(2020, Month.JANUARY, 30, 13, 0), "Обед", 1000),
-            new Meal(LocalDateTime.of(2020, Month.JANUARY, 30, 20, 0), "Ужин", 500),
-            new Meal(LocalDateTime.of(2020, Month.JANUARY, 31, 0, 0), "Еда на граничное значение", 100),
-            new Meal(LocalDateTime.of(2020, Month.JANUARY, 31, 10, 0), "Завтрак", 1000),
-            new Meal(LocalDateTime.of(2020, Month.JANUARY, 31, 13, 0), "Обед", 500),
-            new Meal(LocalDateTime.of(2020, Month.JANUARY, 31, 20, 0), "Ужин", 410)
-    );
+    public static List<Meal> getUserMeals() {
+        return Arrays.asList(
+                new Meal(null, LocalDateTime.of(2020, 10, 19, 8, 30), "User Breakfast", 500),
+                new Meal(null, LocalDateTime.of(2020, 10, 19, 12, 35), "User Lunch", 1000),
+                new Meal(null, LocalDateTime.of(2020, 10, 19, 18, 10), "User Dinner", 1001),
+                new Meal(null, LocalDateTime.of(2020, 10, 20, 8, 30), "User Breakfast", 500),
+                new Meal(null, LocalDateTime.of(2020, 10, 20, 12, 35), "User Lunch", 500),
+                new Meal(null, LocalDateTime.of(2020, 10, 20, 18, 10), "User Dinner", 1000)
+        );
+    }
+
+    public static List<Meal> getAdminMeals() {
+        return Arrays.asList(
+                new Meal(null, LocalDateTime.of(2020, 10, 20, 8, 30), "Admin Breakfast", 500),
+                new Meal(null, LocalDateTime.of(2020, 10, 20, 12, 35), "Admin Lunch", 500),
+                new Meal(null, LocalDateTime.of(2020, 10, 20, 18, 10), "Admin Dinner", 1000)
+        );
+    }
 
     public static List<MealTo> getTos(Collection<Meal> meals, int caloriesPerDay) {
         return filterByPredicate(meals, caloriesPerDay, meal -> true);

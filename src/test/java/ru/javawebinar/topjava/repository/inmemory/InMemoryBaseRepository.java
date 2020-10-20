@@ -13,6 +13,10 @@ public class InMemoryBaseRepository<T extends AbstractBaseEntity> {
 
     private static final AtomicInteger counter = new AtomicInteger(START_SEQ);
 
+    public static void initCounter() {
+        counter.set(START_SEQ + 1);
+    }
+
     final Map<Integer, T> map = new ConcurrentHashMap<>();
 
     public T save(T entry) {
