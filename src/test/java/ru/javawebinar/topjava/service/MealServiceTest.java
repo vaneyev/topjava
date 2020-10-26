@@ -1,7 +1,14 @@
 package ru.javawebinar.topjava.service;
 
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExternalResource;
+import org.junit.runner.Description;
 import org.junit.runner.RunWith;
+import org.junit.runners.model.Statement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.test.context.ContextConfiguration;
@@ -26,6 +33,35 @@ import static ru.javawebinar.topjava.UserTestData.USER_ID;
 @RunWith(SpringRunner.class)
 @Sql(scripts = "classpath:db/populateDB.sql", config = @SqlConfig(encoding = "UTF-8"))
 public class MealServiceTest {
+
+    private static class MealExternalResource extends ExternalResource {
+        private final Logger log = LoggerFactory.getLogger(this.getClass());
+        private String description;
+        private long start;
+
+        @Override
+        public Statement apply(Statement base, Description description) {
+            this.description = description.getDisplayName();
+            return super.apply(base, description);
+        }
+
+        @Override
+        protected void before() throws Throwable {
+            start = System.currentTimeMillis();
+        }
+
+        @Override
+        protected void after() {
+            long end = System.currentTimeMillis();
+            log.info(this.description + " time: " + (end - start));
+        }
+    }
+
+    @Rule
+    public ExternalResource resource = new MealExternalResource();
+
+    @ClassRule
+    public static final ExternalResource classResource = new MealExternalResource();
 
     @Autowired
     private MealService service;
