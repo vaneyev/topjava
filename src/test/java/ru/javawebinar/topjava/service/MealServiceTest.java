@@ -40,16 +40,6 @@ public class MealServiceTest {
     @Autowired
     private MealService service;
 
-    @BeforeClass
-    public static void beforeClass() {
-        stringBuilder = new StringBuilder();
-    }
-
-    @AfterClass
-    public static void afterClass() {
-        log.info(stringBuilder.toString());
-    }
-
     @Rule
     public Stopwatch watcher = new Stopwatch() {
         @Override
@@ -59,6 +49,16 @@ public class MealServiceTest {
             log.info(info);
         }
     };
+
+    @BeforeClass
+    public static void beforeClass() {
+        stringBuilder = new StringBuilder();
+    }
+
+    @AfterClass
+    public static void afterClass() {
+        log.info(stringBuilder.toString());
+    }
 
     @Test
     public void delete() throws Exception {
