@@ -19,6 +19,7 @@ import ru.javawebinar.topjava.util.exception.NotFoundException;
 
 import java.time.LocalDate;
 import java.time.Month;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertThrows;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -34,29 +35,30 @@ import static ru.javawebinar.topjava.UserTestData.USER_ID;
 @Sql(scripts = "classpath:db/populateDB.sql", config = @SqlConfig(encoding = "UTF-8"))
 public class MealServiceTest {
     private static final Logger log = getLogger(MealServiceTest.class);
-    private static StringBuffer stringBuffer;
+    private static StringBuilder stringBuilder;
+
+    @Autowired
+    private MealService service;
 
     @BeforeClass
     public static void beforeClass() {
-        stringBuffer = new StringBuffer();
+        stringBuilder = new StringBuilder();
     }
 
     @AfterClass
     public static void afterClass() {
-        log.info(stringBuffer.toString());
+        log.info(stringBuilder.toString());
     }
 
     @Rule
     public Stopwatch watcher = new Stopwatch() {
         @Override
         protected void finished(long nanos, Description description) {
-            stringBuffer.append(String.format("%n%-25s%f ms", description.getMethodName(), nanos / 1000000.0));
-            super.finished(nanos, description);
+            String info = String.format("%n%-25s%d ms", description.getMethodName(), TimeUnit.NANOSECONDS.toMillis(nanos));
+            stringBuilder.append(info);
+            log.info(info);
         }
     };
-
-    @Autowired
-    private MealService service;
 
     @Test
     public void delete() throws Exception {
