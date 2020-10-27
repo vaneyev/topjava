@@ -1,14 +1,13 @@
 package ru.javawebinar.topjava.service;
 
-import org.junit.ClassRule;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExternalResource;
+import org.junit.rules.Stopwatch;
 import org.junit.runner.Description;
 import org.junit.runner.RunWith;
-import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.test.context.ContextConfiguration;
@@ -22,6 +21,7 @@ import java.time.LocalDate;
 import java.time.Month;
 
 import static org.junit.Assert.assertThrows;
+import static org.slf4j.LoggerFactory.getLogger;
 import static ru.javawebinar.topjava.MealTestData.*;
 import static ru.javawebinar.topjava.UserTestData.ADMIN_ID;
 import static ru.javawebinar.topjava.UserTestData.USER_ID;
@@ -33,35 +33,27 @@ import static ru.javawebinar.topjava.UserTestData.USER_ID;
 @RunWith(SpringRunner.class)
 @Sql(scripts = "classpath:db/populateDB.sql", config = @SqlConfig(encoding = "UTF-8"))
 public class MealServiceTest {
+    private static final Logger log = getLogger(MealServiceTest.class);
+    private static StringBuffer stringBuffer;
 
-    private static class MealExternalResource extends ExternalResource {
-        private final Logger log = LoggerFactory.getLogger(this.getClass());
-        private String description;
-        private long start;
+    @BeforeClass
+    public static void beforeClass() {
+        stringBuffer = new StringBuffer();
+    }
 
-        @Override
-        public Statement apply(Statement base, Description description) {
-            this.description = description.getDisplayName();
-            return super.apply(base, description);
-        }
-
-        @Override
-        protected void before() throws Throwable {
-            start = System.currentTimeMillis();
-        }
-
-        @Override
-        protected void after() {
-            long end = System.currentTimeMillis();
-            log.info(this.description + " time: " + (end - start));
-        }
+    @AfterClass
+    public static void afterClass() {
+        log.info(stringBuffer.toString());
     }
 
     @Rule
-    public ExternalResource resource = new MealExternalResource();
-
-    @ClassRule
-    public static final ExternalResource classResource = new MealExternalResource();
+    public Stopwatch watcher = new Stopwatch() {
+        @Override
+        protected void finished(long nanos, Description description) {
+            stringBuffer.append(String.format("%n%-25s%f ms", description.getMethodName(), nanos / 1000000.0));
+            super.finished(nanos, description);
+        }
+    };
 
     @Autowired
     private MealService service;
