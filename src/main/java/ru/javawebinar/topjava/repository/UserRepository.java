@@ -14,6 +14,8 @@ public interface UserRepository {
     // null if not found
     User get(int id);
 
+    User getWithMeal(int id);
+
     // null if not found
     User getByEmail(String email);
 

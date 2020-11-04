@@ -2,8 +2,10 @@ package ru.javawebinar.topjava.service;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import ru.javawebinar.topjava.Profiles;
 import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.repository.UserRepository;
 
@@ -15,7 +17,7 @@ import static ru.javawebinar.topjava.util.ValidationUtil.checkNotFoundWithId;
 @Service
 public class UserService {
 
-    private final UserRepository repository;
+    protected final UserRepository repository;
 
     public UserService(UserRepository repository) {
         this.repository = repository;
@@ -34,6 +36,10 @@ public class UserService {
 
     public User get(int id) {
         return checkNotFoundWithId(repository.get(id), id);
+    }
+
+    public User getWithMeal(int id) {
+        return checkNotFoundWithId(repository.getWithMeal(id), id);
     }
 
     public User getByEmail(String email) {

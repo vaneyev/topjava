@@ -1,8 +1,10 @@
 package ru.javawebinar.topjava.service;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import ru.javawebinar.topjava.Profiles;
 import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.repository.MealRepository;
 
@@ -24,6 +26,10 @@ public class MealService {
 
     public Meal get(int id, int userId) {
         return checkNotFoundWithId(repository.get(id, userId), id);
+    }
+
+    public Meal getWithUser(int id, int userId) {
+        return checkNotFoundWithId(repository.getWithUser(id, userId), id);
     }
 
     public void delete(int id, int userId) {
