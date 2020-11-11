@@ -1,13 +1,14 @@
-package ru.javawebinar.topjava.web;
+package ru.javawebinar.topjava.web.meal;
 
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.service.MealService;
-import ru.javawebinar.topjava.web.meal.AbstractMealRestController;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -21,13 +22,14 @@ import static ru.javawebinar.topjava.util.DateTimeUtil.parseLocalDate;
 import static ru.javawebinar.topjava.util.DateTimeUtil.parseLocalTime;
 
 @Controller
+@RequestMapping("/meals")
 public class JspMealController extends AbstractMealRestController {
 
     public JspMealController(MealService service) {
-        super(service);
+        super(LoggerFactory.getLogger(JspMealController.class), service);
     }
 
-    @PostMapping("/meals")
+    @PostMapping
     public String doPost(HttpServletRequest request) throws IOException {
         request.setCharacterEncoding("UTF-8");
         Meal meal = new Meal(
@@ -43,13 +45,13 @@ public class JspMealController extends AbstractMealRestController {
         return "redirect:meals";
     }
 
-    @GetMapping("/meals/delete/{id}")
+    @GetMapping("/delete/{id}")
     public String deleteMeal(@PathVariable int id) {
         delete(id);
-        return "redirect:meals";
+        return "redirect:/meals";
     }
 
-    @GetMapping("/meals/create")
+    @GetMapping("/create")
     public String create(HttpServletRequest request) {
         final Meal meal =
                 new Meal(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES), "", 1000);
@@ -57,14 +59,14 @@ public class JspMealController extends AbstractMealRestController {
         return "mealForm";
     }
 
-    @GetMapping("/meals/update/{id}")
+    @GetMapping("/update/{id}")
     public String update(HttpServletRequest request, @PathVariable int id) {
         final Meal meal = get(id);
         request.setAttribute("meal", meal);
         return "mealForm";
     }
 
-    @GetMapping("/meals/filter")
+    @GetMapping("/filter")
     public String filter(HttpServletRequest request) {
         LocalDate startDate = parseLocalDate(request.getParameter("startDate"));
         LocalDate endDate = parseLocalDate(request.getParameter("endDate"));
@@ -74,7 +76,7 @@ public class JspMealController extends AbstractMealRestController {
         return "meals";
     }
 
-    @GetMapping("/meals")
+    @GetMapping
     public String getAll(HttpServletRequest request) {
         request.setAttribute("meals", getAll());
         return "meals";
