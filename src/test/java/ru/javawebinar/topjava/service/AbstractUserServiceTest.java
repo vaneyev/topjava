@@ -34,9 +34,7 @@ public abstract class AbstractUserServiceTest extends AbstractServiceTest {
     @Before
     public void setUp() {
         cacheManager.getCache("users").clear();
-        if (!isJdbc()) {
-            jpaUtil.clear2ndLevelHibernateCache();
-        }
+        jpaUtil.clear2ndLevelHibernateCache();
     }
 
     @Test
