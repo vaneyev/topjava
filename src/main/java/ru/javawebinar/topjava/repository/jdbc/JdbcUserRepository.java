@@ -14,12 +14,14 @@ import ru.javawebinar.topjava.model.Role;
 import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.repository.UserRepository;
 
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotNull;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Repository
@@ -27,6 +29,8 @@ import java.util.stream.Collectors;
 public class JdbcUserRepository implements UserRepository {
 
     private static final BeanPropertyRowMapper<User> ROW_MAPPER = BeanPropertyRowMapper.newInstance(User.class);
+
+    private final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -46,7 +50,12 @@ public class JdbcUserRepository implements UserRepository {
 
     @Override
     @Transactional
-    public User save(@NotNull User user) {
+    public User save(User user) {
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        if (violations.size() > 0) {
+            return null;
+        }
+
         BeanPropertySqlParameterSource parameterSource = new BeanPropertySqlParameterSource(user);
 
         if (user.isNew()) {
@@ -91,7 +100,7 @@ public class JdbcUserRepository implements UserRepository {
     }
 
     @Override
-    public User getByEmail(@Email String email) {
+    public User getByEmail(String email) {
 //        return jdbcTemplate.queryForObject("SELECT * FROM users WHERE email=?", ROW_MAPPER, email);
         List<User> users = jdbcTemplate.query("SELECT * FROM users WHERE email=?", ROW_MAPPER, email);
         users.forEach(user -> user.setRoles(getRolesByUserId(user.id())));
