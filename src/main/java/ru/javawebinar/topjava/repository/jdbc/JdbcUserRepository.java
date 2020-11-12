@@ -15,6 +15,7 @@ import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.repository.UserRepository;
 
 import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import java.sql.PreparedStatement;
@@ -30,7 +31,7 @@ public class JdbcUserRepository implements UserRepository {
 
     private static final BeanPropertyRowMapper<User> ROW_MAPPER = BeanPropertyRowMapper.newInstance(User.class);
 
-    private final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
+    private static final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -53,7 +54,7 @@ public class JdbcUserRepository implements UserRepository {
     public User save(User user) {
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         if (violations.size() > 0) {
-            return null;
+            throw new ConstraintViolationException(violations);
         }
 
         BeanPropertySqlParameterSource parameterSource = new BeanPropertySqlParameterSource(user);
@@ -66,9 +67,13 @@ public class JdbcUserRepository implements UserRepository {
                    registered=:registered, enabled=:enabled, calories_per_day=:caloriesPerDay WHERE id=:id
                 """, parameterSource) == 0) {
             return null;
+        } else {
+            jdbcTemplate.update("DELETE FROM user_roles WHERE user_id=?", user.getId());
         }
         List<Role> roles = List.copyOf(user.getRoles());
-        jdbcTemplate.update("DELETE FROM user_roles WHERE user_id=?", user.getId());
+        if (roles.isEmpty()) {
+            return user;
+        }
         jdbcTemplate.batchUpdate(
                 "INSERT INTO user_roles (user_id, role) VALUES (?, ?)",
                 new BatchPreparedStatementSetter() {
@@ -95,7 +100,9 @@ public class JdbcUserRepository implements UserRepository {
     @Override
     public User get(int id) {
         List<User> users = jdbcTemplate.query("SELECT * FROM users WHERE id=?", ROW_MAPPER, id);
-        users.forEach(user -> user.setRoles(getRolesByUserId(user.id())));
+        if (!users.isEmpty()) {
+            users.get(0).setRoles(getRolesByUserId(users.get(0).id()));
+        }
         return DataAccessUtils.singleResult(users);
     }
 
@@ -103,7 +110,9 @@ public class JdbcUserRepository implements UserRepository {
     public User getByEmail(String email) {
 //        return jdbcTemplate.queryForObject("SELECT * FROM users WHERE email=?", ROW_MAPPER, email);
         List<User> users = jdbcTemplate.query("SELECT * FROM users WHERE email=?", ROW_MAPPER, email);
-        users.forEach(user -> user.setRoles(getRolesByUserId(user.id())));
+        if (!users.isEmpty()) {
+            users.get(0).setRoles(getRolesByUserId(users.get(0).id()));
+        }
         return DataAccessUtils.singleResult(users);
     }
 

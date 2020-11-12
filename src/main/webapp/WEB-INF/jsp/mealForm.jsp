@@ -7,9 +7,13 @@
 <body>
 <jsp:include page="fragments/bodyHeader.jsp"/>
 <section>
-    <h2><spring:message code="meal.title"/></h2>
     <jsp:useBean id="meal" type="ru.javawebinar.topjava.model.Meal" scope="request"/>
-    <form method="post" action="${pageContext.request.contextPath}/meals">
+
+    <h2>
+        <c:if test="${meal.id == null}"><spring:message code="common.create"/></c:if>
+        <c:if test="${meal.id != null}"><spring:message code="common.edit"/></c:if>
+    </h2>
+    <form method="post" action="meals">
         <input type="hidden" name="id" value="${meal.id}">
         <dl>
             <dt><spring:message code="common.time"/>:</dt>

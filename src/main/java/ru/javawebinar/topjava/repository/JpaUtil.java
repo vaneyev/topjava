@@ -6,12 +6,11 @@ import org.hibernate.SessionFactory;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
-public class JpaUtil extends EmptyJpaUtil {
+public class JpaUtil {
 
     @PersistenceContext
     private EntityManager em;
 
-    @Override
     public void clear2ndLevelHibernateCache() {
         Session s = (Session) em.getDelegate();
         SessionFactory sf = s.getSessionFactory();
