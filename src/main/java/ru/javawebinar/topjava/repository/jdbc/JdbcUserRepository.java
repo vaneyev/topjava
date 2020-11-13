@@ -13,11 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.javawebinar.topjava.model.Role;
 import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.repository.UserRepository;
+import ru.javawebinar.topjava.util.ValidationUtil;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
-import javax.validation.Validation;
-import javax.validation.Validator;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
@@ -30,8 +27,6 @@ import java.util.stream.Collectors;
 public class JdbcUserRepository implements UserRepository {
 
     private static final BeanPropertyRowMapper<User> ROW_MAPPER = BeanPropertyRowMapper.newInstance(User.class);
-
-    private static final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -52,13 +47,8 @@ public class JdbcUserRepository implements UserRepository {
     @Override
     @Transactional
     public User save(User user) {
-        Set<ConstraintViolation<User>> violations = validator.validate(user);
-        if (violations.size() > 0) {
-            throw new ConstraintViolationException(violations);
-        }
-
+        ValidationUtil.validateEntity(user);
         BeanPropertySqlParameterSource parameterSource = new BeanPropertySqlParameterSource(user);
-
         if (user.isNew()) {
             Number newKey = insertUser.executeAndReturnKey(parameterSource);
             user.setId(newKey.intValue());
@@ -70,7 +60,11 @@ public class JdbcUserRepository implements UserRepository {
         } else {
             jdbcTemplate.update("DELETE FROM user_roles WHERE user_id=?", user.getId());
         }
-        List<Role> roles = List.copyOf(user.getRoles());
+        Set<Role> roleSet = user.getRoles();
+        if (roleSet == null) {
+            return user;
+        }
+        List<Role> roles = List.copyOf(roleSet);
         if (roles.isEmpty()) {
             return user;
         }
@@ -80,7 +74,7 @@ public class JdbcUserRepository implements UserRepository {
                     @Override
                     public void setValues(PreparedStatement preparedStatement, int i) throws SQLException {
                         preparedStatement.setInt(1, user.getId());
-                        preparedStatement.setString(2, roles.get(i).toString());
+                        preparedStatement.setString(2, roles.get(i).name());
                     }
 
                     @Override
@@ -100,20 +94,22 @@ public class JdbcUserRepository implements UserRepository {
     @Override
     public User get(int id) {
         List<User> users = jdbcTemplate.query("SELECT * FROM users WHERE id=?", ROW_MAPPER, id);
-        if (!users.isEmpty()) {
-            users.get(0).setRoles(getRolesByUserId(users.get(0).id()));
+        User user = DataAccessUtils.singleResult(users);
+        if (user != null) {
+            user.setRoles(getRolesByUserId(user.id()));
         }
-        return DataAccessUtils.singleResult(users);
+        return user;
     }
 
     @Override
     public User getByEmail(String email) {
 //        return jdbcTemplate.queryForObject("SELECT * FROM users WHERE email=?", ROW_MAPPER, email);
         List<User> users = jdbcTemplate.query("SELECT * FROM users WHERE email=?", ROW_MAPPER, email);
-        if (!users.isEmpty()) {
-            users.get(0).setRoles(getRolesByUserId(users.get(0).id()));
+        User user = DataAccessUtils.singleResult(users);
+        if (user != null) {
+            user.setRoles(getRolesByUserId(user.id()));
         }
-        return DataAccessUtils.singleResult(users);
+        return user;
     }
 
     @Override

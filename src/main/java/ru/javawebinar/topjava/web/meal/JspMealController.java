@@ -1,6 +1,7 @@
 package ru.javawebinar.topjava.web.meal;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,7 +26,6 @@ public class JspMealController extends AbstractMealRestController {
 
     @PostMapping
     public String doPost(HttpServletRequest request) throws IOException {
-        request.setCharacterEncoding("UTF-8");
         Meal meal = new Meal(
                 LocalDateTime.parse(request.getParameter("dateTime")),
                 request.getParameter("description"),
@@ -46,17 +46,17 @@ public class JspMealController extends AbstractMealRestController {
     }
 
     @GetMapping("/create")
-    public String create(HttpServletRequest request) {
+    public String create(Model model) {
         final Meal meal =
                 new Meal(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES), "", 1000);
-        request.setAttribute("meal", meal);
+        model.addAttribute("meal", meal);
         return "mealForm";
     }
 
     @GetMapping("/update/{id}")
-    public String update(HttpServletRequest request, @PathVariable int id) {
+    public String update(Model model, @PathVariable int id) {
         final Meal meal = get(id);
-        request.setAttribute("meal", meal);
+        model.addAttribute("meal", meal);
         return "mealForm";
     }
 
@@ -71,8 +71,8 @@ public class JspMealController extends AbstractMealRestController {
     }
 
     @GetMapping
-    public String getAll(HttpServletRequest request) {
-        request.setAttribute("meals", getAll());
+    public String getAll(Model model) {
+        model.addAttribute("meals", getAll());
         return "meals";
     }
 

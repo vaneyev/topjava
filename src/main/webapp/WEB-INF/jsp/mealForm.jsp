@@ -8,11 +8,7 @@
 <jsp:include page="fragments/bodyHeader.jsp"/>
 <section>
     <jsp:useBean id="meal" type="ru.javawebinar.topjava.model.Meal" scope="request"/>
-
-    <h2>
-        <c:if test="${meal.id == null}"><spring:message code="common.create"/></c:if>
-        <c:if test="${meal.id != null}"><spring:message code="common.edit"/></c:if>
-    </h2>
+    <h2><spring:message code="${meal.isNew() ? 'common.create' : 'common.edit'}"/></h2>
     <form method="post" action="meals">
         <input type="hidden" name="id" value="${meal.id}">
         <dl>
