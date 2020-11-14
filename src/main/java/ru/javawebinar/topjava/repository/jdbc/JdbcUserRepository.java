@@ -10,6 +10,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import ru.javawebinar.topjava.model.Role;
 import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.repository.UserRepository;
@@ -61,13 +62,10 @@ public class JdbcUserRepository implements UserRepository {
             jdbcTemplate.update("DELETE FROM user_roles WHERE user_id=?", user.getId());
         }
         Set<Role> roleSet = user.getRoles();
-        if (roleSet == null) {
+        if (CollectionUtils.isEmpty(roleSet)) {
             return user;
         }
         List<Role> roles = List.copyOf(roleSet);
-        if (roles.isEmpty()) {
-            return user;
-        }
         jdbcTemplate.batchUpdate(
                 "INSERT INTO user_roles (user_id, role) VALUES (?, ?)",
                 new BatchPreparedStatementSetter() {
@@ -93,23 +91,14 @@ public class JdbcUserRepository implements UserRepository {
 
     @Override
     public User get(int id) {
-        List<User> users = jdbcTemplate.query("SELECT * FROM users WHERE id=?", ROW_MAPPER, id);
-        User user = DataAccessUtils.singleResult(users);
-        if (user != null) {
-            user.setRoles(getRolesByUserId(user.id()));
-        }
-        return user;
+        return getUser(jdbcTemplate.query("SELECT * FROM users WHERE id=?", ROW_MAPPER, id));
     }
 
     @Override
     public User getByEmail(String email) {
 //        return jdbcTemplate.queryForObject("SELECT * FROM users WHERE email=?", ROW_MAPPER, email);
-        List<User> users = jdbcTemplate.query("SELECT * FROM users WHERE email=?", ROW_MAPPER, email);
-        User user = DataAccessUtils.singleResult(users);
-        if (user != null) {
-            user.setRoles(getRolesByUserId(user.id()));
-        }
-        return user;
+        return getUser(jdbcTemplate.query("SELECT * FROM users WHERE email=?", ROW_MAPPER, email));
+
     }
 
     @Override
@@ -122,10 +111,14 @@ public class JdbcUserRepository implements UserRepository {
                 .collect(Collectors.toList());
     }
 
-    private List<Role> getRolesByUserId(int id) {
-        return jdbcTemplate.query(
-                "SELECT role FROM user_roles WHERE user_id = ?",
-                (resultSet, i) -> Role.valueOf(resultSet.getString("role")),
-                id);
+    private User getUser(List<User> users) {
+        User user = DataAccessUtils.singleResult(users);
+        if (user != null) {
+            user.setRoles(jdbcTemplate.query(
+                    "SELECT role FROM user_roles WHERE user_id = ?",
+                    (resultSet, i) -> Role.valueOf(resultSet.getString("role")),
+                    user.id()));
+        }
+        return user;
     }
 }
