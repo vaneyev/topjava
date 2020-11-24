@@ -24,14 +24,7 @@ class RootControllerTest extends AbstractControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("users"))
                 .andExpect(forwardedUrl("/WEB-INF/jsp/users.jsp"))
-                .andExpect(model().attribute("users",
-                        new AssertionMatcher<List<User>>() {
-                            @Override
-                            public void assertion(List<User> actual) throws AssertionError {
-                                USER_MATCHER.assertMatch(actual, admin, user);
-                            }
-                        }
-                ));
+                .andExpect(model().attribute("users", List.of(admin, user)));
     }
 
     @Test
@@ -41,13 +34,6 @@ class RootControllerTest extends AbstractControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("meals"))
                 .andExpect(forwardedUrl("/WEB-INF/jsp/meals.jsp"))
-                .andExpect(model().attribute(
-                        "meals",
-                        new AssertionMatcher<List<MealTo>>() {
-                            @Override
-                            public void assertion(List<MealTo> actual) throws AssertionError {
-                                MEAL_TO_MATCHER.assertMatch(actual, MealsUtil.getTos(meals, MealsUtil.DEFAULT_CALORIES_PER_DAY));
-                            }
-                        }));
+                .andExpect(model().attribute("meals", MealsUtil.getTos(meals, user.getCaloriesPerDay())));
     }
 }
