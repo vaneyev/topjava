@@ -28,7 +28,6 @@ class RootControllerTest extends AbstractControllerTest {
                             public void assertion(List<User> actual) throws AssertionError {
                                 USER_MATCHER.assertMatch(actual, admin, user);
                             }
-
                         }
                 ));
     }

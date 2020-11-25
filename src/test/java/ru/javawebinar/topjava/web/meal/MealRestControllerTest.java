@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import ru.javawebinar.topjava.MealTestData;
 import ru.javawebinar.topjava.model.Meal;
@@ -13,6 +14,8 @@ import ru.javawebinar.topjava.util.MealsUtil;
 import ru.javawebinar.topjava.util.exception.NotFoundException;
 import ru.javawebinar.topjava.web.AbstractControllerTest;
 import ru.javawebinar.topjava.web.json.JsonUtil;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -81,8 +84,7 @@ public class MealRestControllerTest extends AbstractControllerTest {
         perform(MockMvcRequestBuilders.get(REST_URL))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(result -> assertThat(readListFromJsonMvcResult(result, MealTo.class))
-                        .isEqualTo(MealsUtil.getTos(meals, user.getCaloriesPerDay())));
+                .andExpect(getMatcher(MealsUtil.getTos(meals, user.getCaloriesPerDay())));
     }
 
     @Test
@@ -94,7 +96,7 @@ public class MealRestControllerTest extends AbstractControllerTest {
                 .param("endTime", "20:00:00"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(result -> assertThat(readListFromJsonMvcResult(result, MealTo.class)).isEqualTo(mealTos));
+                .andExpect(getMatcher(mealTos));
     }
 
     @Test
@@ -102,7 +104,11 @@ public class MealRestControllerTest extends AbstractControllerTest {
         perform(MockMvcRequestBuilders.get(REST_URL + "between"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(result -> assertThat(readListFromJsonMvcResult(result, MealTo.class))
-                        .isEqualTo(MealsUtil.getTos(meals, user.getCaloriesPerDay())));
+                .andExpect(getMatcher(MealsUtil.getTos(meals, user.getCaloriesPerDay())));
+    }
+
+    private ResultMatcher getMatcher(List<MealTo> expected) {
+        return result -> assertThat(readListFromJsonMvcResult(result, MealTo.class))
+                .isEqualTo(expected);
     }
 }
