@@ -2,6 +2,7 @@ package ru.javawebinar.topjava.web.user;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import ru.javawebinar.topjava.model.Role;
 import ru.javawebinar.topjava.model.User;
@@ -31,5 +32,13 @@ public class AdminUIController extends AbstractUserController {
                        @RequestParam String email,
                        @RequestParam String password) {
         super.create(new User(null, name, email, password, Role.USER));
+    }
+
+    @PostMapping("/enable")
+    @Transactional
+    public void enable(@RequestParam int id, @RequestParam boolean enabled) {
+        User user = super.get(id);
+        user.setEnabled(enabled);
+        super.update(user, user.getId());
     }
 }

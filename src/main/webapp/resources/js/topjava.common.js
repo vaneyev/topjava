@@ -1,13 +1,12 @@
 var form;
 
-function makeEditable() {
+function makeEditable(filterForm) {
     form = $('#detailsForm');
     $(".delete").click(function () {
         if (confirm('Are you sure?')) {
             deleteRow($(this).closest('tr').attr("id"));
         }
     });
-
     $(document).ajaxError(function (event, jqXHR, options, jsExc) {
         failNoty(jqXHR);
     });
@@ -32,7 +31,11 @@ function deleteRow(id) {
 }
 
 function updateTable() {
-    $.get(ctx.ajaxUrl, function (data) {
+    let url = ctx.ajaxUrl;
+    if (ctx.filterForm !== undefined) {
+        url += "filter?" + ctx.filterForm.serialize();
+    }
+    $.get(url, function (data) {
         ctx.datatableApi.clear().rows.add(data).draw();
     });
 }

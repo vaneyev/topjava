@@ -12,25 +12,28 @@
 <div class="container">
     <h3><spring:message code="meal.title"/></h3>
 
-    <form method="get" action="meals/filter">
+    <form id="filterForm">
         <dl>
             <dt><spring:message code="meal.startDate"/>:</dt>
-            <dd><input type="date" name="startDate" value="${param.startDate}"></dd>
+            <dd><input type="date" name="startDate" oninput="updateTable()"></dd>
         </dl>
         <dl>
             <dt><spring:message code="meal.endDate"/>:</dt>
-            <dd><input type="date" name="endDate" value="${param.endDate}"></dd>
+            <dd><input type="date" name="endDate" oninput="updateTable()"></dd>
         </dl>
         <dl>
             <dt><spring:message code="meal.startTime"/>:</dt>
-            <dd><input type="time" name="startTime" value="${param.startTime}"></dd>
+            <dd><input type="time" name="startTime" oninput="updateTable()"></dd>
         </dl>
         <dl>
             <dt><spring:message code="meal.endTime"/>:</dt>
-            <dd><input type="time" name="endTime" value="${param.endTime}"></dd>
+            <dd><input type="time" name="endTime" oninput="updateTable()"></dd>
         </dl>
-        <button type="submit"><spring:message code="meal.filter"/></button>
     </form>
+    <button class="btn btn-primary" onclick="resetFilter()">
+        <span class="fa fa-eraser"></span>
+        <spring:message code="meal.filter"/>
+    </button>
     <hr>
     <button class="btn btn-primary" onclick="add()">
         <span class="fa fa-plus"></span>
@@ -49,7 +52,7 @@
         </thead>
         <c:forEach items="${meals}" var="meal">
             <jsp:useBean id="meal" scope="page" type="ru.javawebinar.topjava.to.MealTo"/>
-            <tr data-mealExcess="${meal.excess}">
+            <tr data-mealExcess="${meal.excess}" id="${meal.id}">
                 <td>
                         <%--${meal.dateTime.toLocalDate()} ${meal.dateTime.toLocalTime()}--%>
                         <%--<%=TimeUtil.toString(meal.getDateTime())%>--%>
@@ -58,9 +61,12 @@
                 </td>
                 <td>${meal.description}</td>
                 <td>${meal.calories}</td>
-                <td><a href="meals/update?id=${meal.id}"><spring:message code="common.update"/></a></td>
                 <td>
-                    <a class="delete" id="${meal.id}"><span class="fa fa-remove"></span></a>
+                    <a class="edit"><span class="fa fa-edit"></span></a>
+                        <%--                    <a href="meals/update?id=${meal.id}"><spring:message code="common.update"/></a>--%>
+                </td>
+                <td>
+                    <a class="delete"><span class="fa fa-remove"></span></a>
                         <%--                    <a href="meals/delete?id=${meal.id}"><spring:message code="common.delete"/></a>--%>
                 </td>
             </tr>
@@ -71,7 +77,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title"><spring:message code="user.add"/></h4>
+                <h4 class="modal-title"><spring:message code="meal.add"/></h4>
                 <button type="button" class="close" data-dismiss="modal" onclick="closeNoty()">&times;</button>
             </div>
             <div class="modal-body">
@@ -81,7 +87,7 @@
                     <div class="form-group">
                         <label for="dateTime" class="col-form-label"><spring:message code="meal.dateTime"/></label>
                         <input type="datetime-local" class="form-control" id="dateTime" name="dateTime"
-                               placeholder="<spring:message code="user.name"/>">
+                               placeholder="<spring:message code="meal.dateTime"/>">
                     </div>
 
                     <div class="form-group">
