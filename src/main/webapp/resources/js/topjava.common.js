@@ -1,6 +1,6 @@
 var form;
 
-function makeEditable(filterForm) {
+function makeEditable() {
     form = $('#detailsForm');
     $(".delete").click(function () {
         if (confirm('Are you sure?')) {

@@ -43,7 +43,7 @@ $(function () {
 });
 
 function resetFilter() {
-    ctx.filterForm.find(":input").val("");
+    ctx.filterForm.trigger("reset");
     updateTable();
 }
 
