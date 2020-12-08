@@ -13,6 +13,26 @@ function clearFilter() {
     $.get("profile/meals/", updateTableByData);
 }
 
+function setDateTimePicker() {
+    let datePicker = {
+        timepicker: false,
+        format: 'Y-m-d'
+    };
+    $("#startDate").datetimepicker(datePicker);
+    $("#endDate").datetimepicker(datePicker);
+    let timePicker = {
+        datepicker: false,
+        format: 'H:m'
+    };
+    $("#startTime").datetimepicker(timePicker);
+    $("#endTime").datetimepicker(timePicker);
+    let dateTimePicker = {
+        timepicker: false,
+        format: 'Y-m-d\\TH:m',
+    };
+    $("#dateTime").datetimepicker(dateTimePicker);
+}
+
 $(function () {
     ctx = {
         ajaxUrl: mealAjaxUrl,
@@ -63,4 +83,5 @@ $(function () {
         updateTable: updateFilteredTable
     };
     makeEditable();
+    setDateTimePicker();
 });
