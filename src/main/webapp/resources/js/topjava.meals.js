@@ -14,20 +14,11 @@ function clearFilter() {
 }
 
 function setDateTimePicker() {
-    let datePicker = {
-        timepicker: false,
-        format: 'Y-m-d'
-    };
-    $("#startDate").datetimepicker(datePicker);
-    $("#endDate").datetimepicker(datePicker);
-    let timePicker = {
-        datepicker: false,
-        format: 'H:m'
-    };
-    $("#startTime").datetimepicker(timePicker);
-    $("#endTime").datetimepicker(timePicker);
+    $("#startDate").datetimepicker(ctx.startDatePicker);
+    $("#endDate").datetimepicker(ctx.endDatePicker);
+    $("#startTime").datetimepicker(ctx.startTimePicker);
+    $("#endTime").datetimepicker(ctx.endTimePicker);
     let dateTimePicker = {
-        timepicker: false,
         format: 'Y-m-d\\TH:m',
     };
     $("#dateTime").datetimepicker(dateTimePicker);
@@ -35,6 +26,42 @@ function setDateTimePicker() {
 
 $(function () {
     ctx = {
+        startDatePicker: {
+            timepicker: false,
+            format: 'Y-m-d',
+            formatDate: 'Y-m-d',
+            onSelectDate: function ($dtp, current, input) {
+                ctx.endDatePicker.minDate = $dtp.toLocaleDateString("fr-CA");
+                $("#endDate").datetimepicker(ctx.endDatePicker);
+            },
+        },
+        endDatePicker: {
+            timepicker: false,
+            format: 'Y-m-d',
+            formatDate: 'Y-m-d',
+            onSelectDate: function ($dtp, current, input) {
+                ctx.startDatePicker.maxDate = $dtp.toLocaleDateString("fr-CA");
+                $("#startDate").datetimepicker(ctx.startDatePicker);
+            },
+        },
+        startTimePicker: {
+            datepicker: false,
+            format: 'H:i',
+            formatTime:'H:i',
+            onSelectTime: function ($dtp, current, input) {
+                ctx.endTimePicker.minTime = $dtp.toLocaleTimeString();
+                $("#endTime").datetimepicker(ctx.endTimePicker);
+            },
+        },
+        endTimePicker: {
+            datepicker: false,
+            format: 'H:i',
+            formatTime:'H:i',
+            onSelectTime: function ($dtp, current, input) {
+                ctx.startTimePicker.maxTime = $dtp.toLocaleTimeString();
+                $("#startTime").datetimepicker(ctx.startTimePicker);
+            },
+        },
         ajaxUrl: mealAjaxUrl,
         datatableApi: $("#datatable").DataTable({
             "ajax": {
