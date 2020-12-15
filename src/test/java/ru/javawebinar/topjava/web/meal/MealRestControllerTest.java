@@ -1,6 +1,5 @@
 package ru.javawebinar.topjava.web.meal;
 
-
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -79,6 +78,16 @@ class MealRestControllerTest extends AbstractControllerTest {
                 .andExpect(status().isNoContent());
 
         MEAL_MATCHER.assertMatch(mealService.get(MEAL1_ID, USER_ID), updated);
+    }
+
+    @Test
+    void updateNoValid() throws Exception {
+        Meal updated = getUpdated();
+        updated.setCalories(null);
+        perform(MockMvcRequestBuilders.put(REST_URL + MEAL1_ID).contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtil.writeValue(updated))
+                .with(userHttpBasic(user)))
+                .andExpect(status().isUnprocessableEntity());
     }
 
     @Test

@@ -8,6 +8,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import ru.javawebinar.topjava.UserTestData;
 import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.service.UserService;
+import ru.javawebinar.topjava.util.UserUtil;
 import ru.javawebinar.topjava.util.exception.NotFoundException;
 import ru.javawebinar.topjava.web.AbstractControllerTest;
 import ru.javawebinar.topjava.web.json.JsonUtil;
@@ -89,13 +90,32 @@ class AdminRestControllerTest extends AbstractControllerTest {
     @Test
     void update() throws Exception {
         User updated = UserTestData.getUpdated();
+        String json = JsonUtil.writeValue(UserUtil.asTo(updated));
         perform(MockMvcRequestBuilders.put(REST_URL + USER_ID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .with(userHttpBasic(admin))
-                .content(JsonUtil.writeValue(updated)))
+                .content(json))
                 .andExpect(status().isNoContent());
+    }
 
-        USER_MATCHER.assertMatch(userService.get(USER_ID), updated);
+    @Test
+    void updateNotValid() throws Exception {
+        User updated = UserTestData.getUpdated();
+        updated.setName(null);
+        perform(MockMvcRequestBuilders.put(REST_URL + USER_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(userHttpBasic(admin)))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void updateEmailNotValid() throws Exception {
+        User updated = UserTestData.getUpdated();
+        updated.setEmail("admin@gmail.com");
+        perform(MockMvcRequestBuilders.put(REST_URL + USER_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(userHttpBasic(admin)))
+                .andExpect(status().isUnprocessableEntity());
     }
 
     @Test

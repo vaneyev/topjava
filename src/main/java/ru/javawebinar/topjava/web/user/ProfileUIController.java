@@ -1,8 +1,10 @@
 package ru.javawebinar.topjava.web.user;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,7 +28,15 @@ public class ProfileUIController extends AbstractUserController {
         if (result.hasErrors()) {
             return "profile";
         } else {
-            super.update(userTo, SecurityUtil.authUserId());
+            try {
+                super.update(userTo, SecurityUtil.authUserId());
+            } catch (DataIntegrityViolationException ex) {
+                result.addError(new FieldError(
+                        "userTo",
+                        "email",
+                        "User with this email already exists"));
+                return "profile";
+            }
             SecurityUtil.get().update(userTo);
             status.setComplete();
             return "redirect:/meals";

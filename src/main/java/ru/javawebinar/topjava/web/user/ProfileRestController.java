@@ -1,13 +1,21 @@
 package ru.javawebinar.topjava.web.user;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.to.UserTo;
+import ru.javawebinar.topjava.util.ValidationUtil;
+import ru.javawebinar.topjava.util.exception.ErrorInfo;
+import ru.javawebinar.topjava.util.exception.IllegalRequestDataException;
+import ru.javawebinar.topjava.web.ExceptionInfoHandler;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 import java.net.URI;
 
 import static ru.javawebinar.topjava.web.SecurityUtil.authUserId;
@@ -39,7 +47,7 @@ public class ProfileRestController extends AbstractUserController {
 
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void update(@RequestBody UserTo userTo) {
+    public void update(@Valid @RequestBody UserTo userTo) {
         super.update(userTo, authUserId());
     }
 
@@ -51,5 +59,21 @@ public class ProfileRestController extends AbstractUserController {
     @GetMapping("/with-meals")
     public User getWithMeals() {
         return super.getWithMeals(authUserId());
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorInfo> handleMethodArgumentNotValidException(MethodArgumentNotValidException error, HttpServletRequest request) {
+        return ResponseEntity.unprocessableEntity().body(new ExceptionInfoHandler().illegalRequestDataError(
+                request,
+                new IllegalRequestDataException(ValidationUtil.getErrorString(error.getBindingResult()))
+        ));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorInfo> handleDataIntegrityViolationException(DataIntegrityViolationException error, HttpServletRequest request) {
+        return ResponseEntity.unprocessableEntity().body(new ExceptionInfoHandler().illegalRequestDataError(
+                request,
+                new IllegalRequestDataException("User with this email already exists")
+        ));
     }
 }

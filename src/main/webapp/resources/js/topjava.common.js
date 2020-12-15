@@ -95,10 +95,10 @@ function successNoty(key) {
 
 function failNoty(jqXHR) {
     closeNoty();
-    var errorInfo = jqXHR.responseJSON;
+    var errorInfo = $.parseJSON(jqXHR.responseText);
     failedNote = new Noty({
-        text: "<span class='fa fa-lg fa-exclamation-circle'></span> &nbsp;" + i18n["common.errorStatus"] + ": " + jqXHR.status +
-            "<br>" + errorInfo.type + "<br>" + errorInfo.detail,
+        text: "<span class='fa fa-lg fa-exclamation-circle'></span> &nbsp;" + (jqXHR.status == 422 ? i18n["common.appError"] : (i18n["common.errorStatus"] + ": " + jqXHR.status +
+            "<br>" + errorInfo.type)) + "<br>" + errorInfo.detail,
         type: "error",
         layout: "bottomRight"
     }).show();
